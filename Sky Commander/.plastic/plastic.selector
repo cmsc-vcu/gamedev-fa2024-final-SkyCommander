@@ -1,0 +1,4 @@
+repository "Sky Commander@simess@cloud"
+  path "/"
+    br "/main"
+    co "/main"
