@@ -1,53 +1,58 @@
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 
 public class DirectionSignController : MonoBehaviour
 {
     public TextMeshProUGUI leftDirectionText;
     public TextMeshProUGUI rightDirectionText;
-    public TrafficLightController trafficLightController; // Reference to the light controller
-    public AirplaneController airplaneController; // Reference to the airplane controller for crash behavior
+    public TrafficLightController trafficLightController;
+    public AirplaneController airplaneController;
+    public GameObject crashPanel;
+    public Button restartButton;
 
-    private string leftCurrentDirection; // Current direction for the left lightstick
-    private string rightCurrentDirection; // Current direction for the right lightstick
-    private int attempts = 0; // Number of attempts the player has made
-    private int maxAttempts = 3; // Maximum allowed attempts
-    private int difficultyLevel = 1; // Difficulty level, starts at 1
+    private string leftCurrentDirection;
+    private string rightCurrentDirection;
+    private int attempts = 0;
+    private int maxAttempts = 3;
+    private int difficultyLevel = 1;
+    private bool isCrashed = false;
 
     void Start()
     {
         GenerateNewDirections();
+        crashPanel.SetActive(false);
+
+        restartButton.onClick.AddListener(RestartGame);
     }
 
     void Update()
     {
-        CheckPlayerInput();
+        if (!isCrashed)
+        {
+            CheckPlayerInput();
+        }
     }
 
     void GenerateNewDirections()
     {
-        // Reset attempts
         attempts = 0;
-
-        // Generate random directions for left and right lightsticks based on difficulty
         string[] directions = { "Up", "Down", "Left", "Right" };
         leftCurrentDirection = directions[Random.Range(0, directions.Length)];
 
-        // Increase randomness as the difficulty level rises
-        if (difficultyLevel < 3) // Easy difficulty: both directions are the same
+        if (difficultyLevel < 3)
         {
             rightCurrentDirection = leftCurrentDirection;
         }
-        else if (difficultyLevel < 5) // Medium difficulty: 50% chance of both directions being the same
+        else if (difficultyLevel < 5)
         {
             rightCurrentDirection = Random.Range(0, 2) == 0 ? leftCurrentDirection : directions[Random.Range(0, directions.Length)];
         }
-        else // Hard difficulty: fully random directions for left and right
+        else
         {
             rightCurrentDirection = directions[Random.Range(0, directions.Length)];
         }
 
-        // Update the direction text to show the player
         leftDirectionText.text = "Left: " + leftCurrentDirection;
         rightDirectionText.text = "Right: " + rightCurrentDirection;
     }
@@ -57,7 +62,6 @@ public class DirectionSignController : MonoBehaviour
         bool isLeftCorrect = false;
         bool isRightCorrect = false;
 
-        // Check if the left lightstick matches the left direction
         switch (leftCurrentDirection)
         {
             case "Up":
@@ -74,7 +78,6 @@ public class DirectionSignController : MonoBehaviour
                 break;
         }
 
-        // Check if the right lightstick matches the right direction
         switch (rightCurrentDirection)
         {
             case "Up":
@@ -93,11 +96,10 @@ public class DirectionSignController : MonoBehaviour
 
         if (isLeftCorrect && isRightCorrect)
         {
-            // Both directions are correct, so generate new directions and increase difficulty
-            difficultyLevel++; // Increase difficulty level
+            difficultyLevel++;
             GenerateNewDirections();
         }
-        else if (Input.anyKeyDown) // Only count incorrect input on key press
+        else if (Input.anyKeyDown)
         {
             attempts++;
             if (attempts >= maxAttempts)
@@ -109,12 +111,26 @@ public class DirectionSignController : MonoBehaviour
 
     void TriggerCrash()
     {
-        // Logic for what happens on crash (e.g., stop airplane growth or display crash message)
-        airplaneController.enabled = false; // Stop the airplane from growing as an example
-        leftDirectionText.text = "Crash!"; // Display crash message on the left
-        rightDirectionText.text = "Crash!"; // Display crash message on the right
+        isCrashed = true;
+        airplaneController.enabled = false; // Disable plane controls
+        trafficLightController.enabled = false; // Disable traffic light controls
+        leftDirectionText.text = "Crash!";
+        rightDirectionText.text = "Crash!";
 
-        // Optionally reset difficulty level on crash
-        difficultyLevel = 1;
+        crashPanel.SetActive(true); // Show crash panel
     }
+
+    void RestartGame()
+    {
+        // Reset game variables and UI
+        isCrashed = false;
+        difficultyLevel = 1;
+        attempts = 0;  // Reset attempts counter to 0
+        airplaneController.enabled = true; // Enable plane controls
+        trafficLightController.enabled = true; // Enable traffic light controls
+        crashPanel.SetActive(false); // Hide crash panel
+        airplaneController.ResetPlaneSize(); // Reset the plane size
+        GenerateNewDirections(); // Generate new directions for the next round
+    }
+
 }
