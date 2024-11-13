@@ -13,4 +13,9 @@ public class AirplaneController : MonoBehaviour
             transform.localScale += Vector3.one * growRate * Time.deltaTime;
         }
     }
+    public void StopGrowth()
+    {
+        enabled = false; // Disable the growth behavior
+    }
+
 }
