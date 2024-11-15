@@ -1,54 +1,44 @@
-# Elevator Wipeout - Sidecars and PBRs - Fall 2024
+# Sky Commander - Team Komatte - Fall 2024
 
-Elevator Wipeout is a save-the-world game where the player does all they can to prevent bad guys from destroying a space elevator.  If the bad guys win, the earth
-is destroyed in a spectacular, slow-motion extravaganza.
+Sky Commander is an arcade game about a new air traffic controller directing the
+planes that land with increasing difficulty.
 
-This repo contains our work on the four-person game development projects for GameDev.
+This repo contains our work on the four-person game development projects for GameDev. (really two person)
 
 ## Authors
 
-- John Leonard (jdleonard@vcu.edu)
-- Jason Bennett (jebennett@vcu.edu)
-- Skippy McBoatface (skippy@mcboatface.com)
-- MF Broom (mfbroom@rva.com)
+- Shane Simes (simess@vcu.edu)
+- Elizabeth Wright (wrighte7@vcu.edu)
 
 ## Game Description
 
-Provide more details of the game.  Discuss any unique game play features.  Why is
-this game different from others?  What is the goal for playing?
+The game is centered on guiding or directing "traffic" through different airspaces or towards specific targets using two virtual lightsticks, each controlled separately. The player operates each lightstick through different input sets: the left one with WASD controls and the right with arrow keys. This introduces a unique challenge in coordination and precision as the player must manage both directional inputs to synchronize movement effectively.
+
+# Unique Gameplay Features
+
+Dual-Control Mechanic: Unlike most games where players control a single entity or group with unified controls, this game challenges players to independently coordinate two separate controls. This dual-input system is uncommon and requires a higher level of ambidexterity and spatial awareness.
+
+Directional Signaling: Each lightstick's directional inputs will align with specific targets or "paths."
+
+Increasing Complexity: As the game progresses the speed and direction increases and players might need to shift directions rapidly or deal with potential obstacles
+
+Game Goal
+The ultimate objective of the game could be to direct a certain number of aircraft to safe zones within a time limit or to avoid collisions as long as possible. Success might be measured by accuracy, time spent directing traffic, or the number of successful passes without any accidents.
+
+How It Stands Out
+This game emphasizes spatial coordination and dual-task management at a level uncommon in traditional games. It combines aspects of rhythm, real-time strategy, and reflex-based mechanics, making it suitable for players looking for a mentally stimulating and challenging experience. The innovative control scheme, along with a focus on coordination and timing, makes it distinctive from conventional single-controller or synchronized-input games.
 
 ## Important Links
 
-- Game URL: < ... >
-- GITHUB URL: < ... >
-- Gameplay Video URL: < ... >
-- Google Doc writeup: < ... >
+- Game URL: Coming Soon
+- GITHUB URL: [Github](https://github.com/cmsc-vcu/gamedev-fa2024-final-simess101)
+- Gameplay Video URL: [Gameplay](https://drive.google.com/file/d/1mRok9djswVITix_jfsby5tsdooplVG7n/view?usp=sharing)
+- Google Doc writeup: [Google Slides](https://docs.google.com/presentation/d/1LPPghLMnG5b44LMmLlWRv0oJis3UIuFD3I0qyjA1r8Q/edit?usp=sharing)
 
 ## Files in the repository
 
-./unity/ - this folder contains the Unity game files associated with this game.
+./assets/ - this folder contains the asset files associated with this game.
 
-./website/ - this folder contains files associated with the *gh-pages* created for this game.
+./website/ - this folder contains files associated with the _gh-pages_ created for this game.
 
-./docs/ - Don't edit files in this folder directly.  Edit the source documents in the *./website* folder, then use `quarto` to render the documents to HTML and store them in the *./docs* folder.
-
-
-## How to modify this README.md
-
-Certainly you want to customize the info above this section to make it your own. But, please don't stop there.
-
-To learn more about writing good README.md files, see:
-
-<https://www.freecodecamp.org/news/how-to-write-a-good-readme-file/>
-
-This is a scaffold project. We’ll be providing scaffolds throughout the
-semester to get you working faster, and to make grading much easier for
-the TA team.
-
-This repository supports Homework 6. Here are the homework specs and
-tasks:
-
-<https://virginiacommonwealth.instructure.com/courses/105808/assignments/952983>
-
-Good luck!
-
+./docs/ - Don't edit files in this folder directly. Edit the source documents in the _./website_ folder, then use `quarto` to render the documents to HTML and store them in the _./docs_ folder.
