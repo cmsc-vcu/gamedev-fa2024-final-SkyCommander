@@ -8,15 +8,20 @@ public class TrafficLightController : MonoBehaviour
 
     // Define rotation angles for each direction
     private Vector3 upRotation = new Vector3(0, 0, 0);     // Up
-    private Vector3 downLRotation = new Vector3(0, 0, 180-45); // Down
-    private Vector3 downRRotation = new Vector3(0, 0, 180+50); // Down
+    private Vector3 downLRotation = new Vector3(0, 0, 180 - 45); // Down
+    private Vector3 downRRotation = new Vector3(0, 0, 180 + 50); // Down
     private Vector3 leftRotation = new Vector3(0, 0, 45);  // Left
     private Vector3 rightRotation = new Vector3(0, 0, -45); // Right
 
+    private bool isActive = true; // Flag to enable/disable input handling
+
     void Update()
     {
-        HandleLeftLightInput();
-        HandleRightLightInput();
+        if (isActive)
+        {
+            HandleLeftLightInput();
+            HandleRightLightInput();
+        }
     }
 
     void HandleLeftLightInput()
@@ -59,5 +64,18 @@ public class TrafficLightController : MonoBehaviour
         {
             rightLightPivot.transform.localEulerAngles = rightRotation;
         }
+    }
+
+    // Method to reset lights to their default rotation
+    public void ResetLights()
+    {
+        leftLightPivot.transform.localEulerAngles = upRotation;
+        rightLightPivot.transform.localEulerAngles = upRotation;
+    }
+
+    // Method to enable or disable input handling
+    public void SetActive(bool active)
+    {
+        isActive = active;
     }
 }

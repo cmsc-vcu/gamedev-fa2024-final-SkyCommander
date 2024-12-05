@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 
 public class DirectionSignController : MonoBehaviour
 {
@@ -16,18 +15,19 @@ public class DirectionSignController : MonoBehaviour
     public GameObject crashPanel;
     public Button restartButton;
 
+    private bool leftInputLocked = false; // Tracks if the left side input is locked
+    private bool rightInputLocked = false; // Tracks if the right side input is locked
+    private string lockedLeftInput = ""; // Stores the locked left input direction
+    private string lockedRightInput = ""; // Stores the locked right input direction
     private string leftCurrentDirection;
     private string rightCurrentDirection;
-    private int attempts = 0;
-    private int maxAttempts = 3;
-    private int difficultyLevel = 1;
-    private bool isCrashed = false;
-
-    // Track if inputs were received for both sides
-    private bool leftInputReceived = false;
-    private bool rightInputReceived = false;
-    private bool isLeftCorrect = false;
-    private bool isRightCorrect = false;
+    private int successfulInputs = 0; // Number of successful inputs for landing
+    private int attempts = 0; // Number of incorrect attempts
+    private int maxAttempts = 3; // Max incorrect attempts before crash
+    private int difficultyLevel = 1; // Difficulty level for randomization
+    private bool controlsLocked = false; // Lock controls during incorrect input
+    private bool isCrashed = false; // Flag for crash state
+    private bool isLandingSequenceActive = false; // Prevent inputs during landing
 
     void Start()
     {
@@ -38,7 +38,7 @@ public class DirectionSignController : MonoBehaviour
 
     void Update()
     {
-        if (!isCrashed)
+        if (!isCrashed && !isLandingSequenceActive && !controlsLocked)
         {
             CheckPlayerInput();
         }
@@ -46,16 +46,12 @@ public class DirectionSignController : MonoBehaviour
 
     void GenerateNewDirections()
     {
-        attempts = 0; // Reset attempts for each new direction
-        leftInputReceived = false;
-        rightInputReceived = false;
-
         string[] directions = { "Up", "Down", "Left", "Right" };
-        leftCurrentDirection = directions[Random.Range(0, directions.Length)];
 
-        if (difficultyLevel < 3)
+        leftCurrentDirection = directions[Random.Range(0, directions.Length)];
+        if (difficultyLevel == 1)
         {
-            rightCurrentDirection = leftCurrentDirection;
+            rightCurrentDirection = leftCurrentDirection; // Same direction for both
         }
         else if (difficultyLevel < 5)
         {
@@ -68,6 +64,8 @@ public class DirectionSignController : MonoBehaviour
 
         SetDirectionImage(leftDirectionImage, leftCurrentDirection);
         SetDirectionImage(rightDirectionImage, rightCurrentDirection);
+
+        Debug.Log($"New directions: Left ({leftCurrentDirection}), Right ({rightCurrentDirection})");
     }
 
     void SetDirectionImage(Image directionImage, string direction)
@@ -88,112 +86,188 @@ public class DirectionSignController : MonoBehaviour
                 break;
         }
     }
-
-    void CheckPlayerInput()
+    void LockLeftInput(string input)
     {
-        // Check WASD inputs for left direction
-        if (!leftInputReceived)
+        leftInputLocked = true;
+        lockedLeftInput = input;
+        Debug.Log($"Left input locked: {input}");
+    }
+
+    void LockRightInput(string input)
+    {
+        rightInputLocked = true;
+        lockedRightInput = input;
+        Debug.Log($"Right input locked: {input}");
+    }
+
+    void ValidateInputs()
+    {
+        string leftMappedDirection = GetDirectionForKey(lockedLeftInput);
+        string rightMappedDirection = GetDirectionForKey(lockedRightInput);
+
+        Debug.Log($"Validating: Left ({lockedLeftInput} -> {leftMappedDirection}), Right ({lockedRightInput} -> {rightMappedDirection})");
+
+        if (leftMappedDirection == leftCurrentDirection && rightMappedDirection == rightCurrentDirection)
         {
-            switch (leftCurrentDirection)
-            {
-                case "Up":
-                    isLeftCorrect = Input.GetKey(KeyCode.W);
-                    break;
-                case "Down":
-                    isLeftCorrect = Input.GetKey(KeyCode.S);
-                    break;
-                case "Left":
-                    isLeftCorrect = Input.GetKey(KeyCode.A);
-                    break;
-                case "Right":
-                    isLeftCorrect = Input.GetKey(KeyCode.D);
-                    break;
-            }
+            Debug.Log("Inputs are correct!");
+            successfulInputs++;
+            ResetInputLocks();
 
-            if (isLeftCorrect || Input.anyKeyDown)
+            if (successfulInputs >= 3)
             {
-                leftInputReceived = true; // Mark left input as received
-            }
-        }
-
-        // Check arrow key inputs for right direction
-        if (!rightInputReceived)
-        {
-            switch (rightCurrentDirection)
-            {
-                case "Up":
-                    isRightCorrect = Input.GetKey(KeyCode.UpArrow);
-                    break;
-                case "Down":
-                    isRightCorrect = Input.GetKey(KeyCode.DownArrow);
-                    break;
-                case "Left":
-                    isRightCorrect = Input.GetKey(KeyCode.LeftArrow);
-                    break;
-                case "Right":
-                    isRightCorrect = Input.GetKey(KeyCode.RightArrow);
-                    break;
-            }
-
-            if (isRightCorrect || Input.anyKeyDown)
-            {
-                rightInputReceived = true; // Mark right input as received
-            }
-        }
-
-        // Only check for correctness once both inputs are received
-        if (leftInputReceived && rightInputReceived)
-        {
-            if (isLeftCorrect && isRightCorrect)
-            {
-                difficultyLevel++;
-                GenerateNewDirections();
+                TriggerLanding();
             }
             else
             {
-                attempts++;
-                ShowIncorrectInput();
-
-                if (attempts >= maxAttempts)
-                {
-                    TriggerCrash();
-                }
+                GenerateNewDirections();
             }
+        }
+        else
+        {
+            Debug.Log($"Incorrect inputs: Left ({lockedLeftInput} -> {leftMappedDirection}), Right ({lockedRightInput} -> {rightMappedDirection})");
+            attempts++;
 
-            // Reset inputs for the next round
-            leftInputReceived = false;
-            rightInputReceived = false;
-            isLeftCorrect = false;
-            isRightCorrect = false;
+            if (attempts >= maxAttempts)
+            {
+                TriggerCrash();
+            }
+            else
+            {
+                LockControlsAndShowIncorrectInput();
+            }
         }
     }
 
-    void ShowIncorrectInput()
+
+
+    void ResetInputLocks()
     {
-        leftDirectionImage.sprite = incorrectInputSprite;
-        rightDirectionImage.sprite = incorrectInputSprite;
-        Invoke(nameof(GenerateNewDirections), 1.0f); // Show "X" for a moment before changing directions
+        leftInputLocked = false;
+        rightInputLocked = false;
+        lockedLeftInput = "";
+        lockedRightInput = "";
     }
 
-    void TriggerCrash()
+    string GetDirectionForKey(string key)
     {
-        isCrashed = true;
-        airplaneController.enabled = false;
-        trafficLightController.enabled = false;
+        switch (key)
+        {
+            case "W": return "Up";
+            case "S": return "Down";
+            case "A": return "Left";
+            case "D": return "Right";
+            case "UpArrow": return "Up";
+            case "DownArrow": return "Down";
+            case "LeftArrow": return "Left";
+            case "RightArrow": return "Right";
+            default:
+                Debug.LogError($"Unrecognized key: {key}");
+                return ""; // Return empty if the key is unrecognized
+        }
+    }
+
+
+
+    void CheckPlayerInput()
+    {
+        if (controlsLocked) return;
+
+        if (!leftInputLocked)
+        {
+            if (Input.GetKeyDown(KeyCode.W)) LockLeftInput("W");
+            else if (Input.GetKeyDown(KeyCode.S)) LockLeftInput("S");
+            else if (Input.GetKeyDown(KeyCode.A)) LockLeftInput("A");
+            else if (Input.GetKeyDown(KeyCode.D)) LockLeftInput("D");
+        }
+
+        if (!rightInputLocked)
+        {
+            if (Input.GetKeyDown(KeyCode.UpArrow)) LockRightInput("UpArrow");
+            else if (Input.GetKeyDown(KeyCode.DownArrow)) LockRightInput("DownArrow");
+            else if (Input.GetKeyDown(KeyCode.LeftArrow)) LockRightInput("LeftArrow");
+            else if (Input.GetKeyDown(KeyCode.RightArrow)) LockRightInput("RightArrow");
+        }
+
+        if (leftInputLocked && rightInputLocked)
+        {
+            ValidateInputs();
+        }
+    }
+
+
+
+    void LockControlsAndShowIncorrectInput()
+    {
+        controlsLocked = true; // Lock controls
         leftDirectionImage.sprite = incorrectInputSprite;
         rightDirectionImage.sprite = incorrectInputSprite;
-        crashPanel.SetActive(true);
+
+        // Display "X" for 0.5 seconds instead of 1 second
+        Invoke(nameof(UnlockControlsAndGenerateNewDirection), 0.5f);
     }
+
+
+    void UnlockControlsAndGenerateNewDirection()
+    {
+        controlsLocked = false; // Unlock controls
+        GenerateNewDirections();
+    }
+
+    void TriggerLanding()
+    {
+        isLandingSequenceActive = true;
+        airplaneController.StopGrowth();
+        airplaneController.PlayLandingSequence();
+
+        // Increment difficulty level after landing
+        difficultyLevel++;
+        Debug.Log($"Landing successful. Difficulty level increased to {difficultyLevel}");
+
+        // Schedule new plane spawning
+        Invoke(nameof(SpawnNewPlane), 5f);
+
+        // Reset the crash timer
+        airplaneController.ResetCrashTimer();
+    }
+
+
+    void SpawnNewPlane()
+    {
+        Debug.Log("Spawning new plane with increased difficulty...");
+        successfulInputs = 0; // Reset inputs
+        attempts = 0; // Reset attempts
+        isLandingSequenceActive = false; // Allow input again
+        airplaneController.ResetPlaneSize(); // Reset the current plane
+        airplaneController.IncreaseSpeed(difficultyLevel); // Speed up the plane
+        GenerateNewDirections(); // Start with new directions
+    }
+
+    public void TriggerCrash()
+    {
+        Debug.Log("Triggering crash...");
+        isCrashed = true; // Set crash state
+        trafficLightController.SetActive(false); // Disable traffic light inputs
+        airplaneController.PlayCrashAnimation(); // Trigger crash animation
+
+        crashPanel.SetActive(true); // Show crash UI
+        restartButton.gameObject.SetActive(true); // Ensure restart button is visible
+    }
+
 
     void RestartGame()
     {
+        Debug.Log("Restarting game...");
         isCrashed = false;
-        difficultyLevel = 1;
+        successfulInputs = 0;
         attempts = 0;
-        airplaneController.enabled = true;
-        trafficLightController.enabled = true;
-        crashPanel.SetActive(false);
+        difficultyLevel = 1; // Reset difficulty level
+        controlsLocked = false;
+        isLandingSequenceActive = false;
         airplaneController.ResetPlaneSize();
-        GenerateNewDirections();
+        crashPanel.SetActive(false);
+
+        GenerateNewDirections(); // Generate new directions
     }
+
+
 }
