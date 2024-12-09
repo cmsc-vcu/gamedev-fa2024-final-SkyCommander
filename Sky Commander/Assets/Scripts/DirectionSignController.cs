@@ -31,9 +31,10 @@ public class DirectionSignController : MonoBehaviour
 
     void Start()
     {
-        GenerateNewDirections();
         crashPanel.SetActive(false);
         restartButton.onClick.AddListener(RestartGame);
+        GenerateNewDirections();
+
     }
 
     void Update()
@@ -51,7 +52,7 @@ public class DirectionSignController : MonoBehaviour
         leftCurrentDirection = directions[Random.Range(0, directions.Length)];
         if (difficultyLevel == 1)
         {
-            rightCurrentDirection = leftCurrentDirection; // Same direction for both
+            rightCurrentDirection = leftCurrentDirection;
         }
         else if (difficultyLevel < 5)
         {
@@ -67,6 +68,7 @@ public class DirectionSignController : MonoBehaviour
 
         Debug.Log($"New directions: Left ({leftCurrentDirection}), Right ({rightCurrentDirection})");
     }
+
 
     void SetDirectionImage(Image directionImage, string direction)
     {
@@ -102,6 +104,8 @@ public class DirectionSignController : MonoBehaviour
 
     void ValidateInputs()
     {
+        if (!leftInputLocked || !rightInputLocked) return; // Skip validation if inputs aren't locked
+
         string leftMappedDirection = GetDirectionForKey(lockedLeftInput);
         string rightMappedDirection = GetDirectionForKey(lockedRightInput);
 
@@ -140,6 +144,8 @@ public class DirectionSignController : MonoBehaviour
 
 
 
+
+
     void ResetInputLocks()
     {
         leftInputLocked = false;
@@ -170,8 +176,9 @@ public class DirectionSignController : MonoBehaviour
 
     void CheckPlayerInput()
     {
-        if (controlsLocked) return;
+        if (controlsLocked || isCrashed) return; // Ignore input when controls are locked or crashed
 
+        // Check left input if not already locked
         if (!leftInputLocked)
         {
             if (Input.GetKeyDown(KeyCode.W)) LockLeftInput("W");
@@ -180,6 +187,7 @@ public class DirectionSignController : MonoBehaviour
             else if (Input.GetKeyDown(KeyCode.D)) LockLeftInput("D");
         }
 
+        // Check right input if not already locked
         if (!rightInputLocked)
         {
             if (Input.GetKeyDown(KeyCode.UpArrow)) LockRightInput("UpArrow");
@@ -188,11 +196,13 @@ public class DirectionSignController : MonoBehaviour
             else if (Input.GetKeyDown(KeyCode.RightArrow)) LockRightInput("RightArrow");
         }
 
+        // Validate when both inputs are locked
         if (leftInputLocked && rightInputLocked)
         {
             ValidateInputs();
         }
     }
+
 
 
 
@@ -213,7 +223,7 @@ public class DirectionSignController : MonoBehaviour
         GenerateNewDirections();
     }
 
-    void TriggerLanding()
+    public void TriggerLanding()
     {
         isLandingSequenceActive = true;
         airplaneController.StopGrowth();
@@ -223,12 +233,13 @@ public class DirectionSignController : MonoBehaviour
         difficultyLevel++;
         Debug.Log($"Landing successful. Difficulty level increased to {difficultyLevel}");
 
+        // Reset crash timer with the updated difficulty level
+        airplaneController.ResetCrashTimer(difficultyLevel);
+
         // Schedule new plane spawning
         Invoke(nameof(SpawnNewPlane), 5f);
-
-        // Reset the crash timer
-        airplaneController.ResetCrashTimer();
     }
+
 
 
     void SpawnNewPlane()
@@ -244,30 +255,54 @@ public class DirectionSignController : MonoBehaviour
 
     public void TriggerCrash()
     {
+        if (isCrashed) return; // Prevent duplicate crash triggers
         Debug.Log("Triggering crash...");
-        isCrashed = true; // Set crash state
-        trafficLightController.SetActive(false); // Disable traffic light inputs
-        airplaneController.PlayCrashAnimation(); // Trigger crash animation
 
-        crashPanel.SetActive(true); // Show crash UI
-        restartButton.gameObject.SetActive(true); // Ensure restart button is visible
+        isCrashed = true;
+
+        // Disable traffic light inputs
+        //trafficLightController.SetActive(false);
+
+        // Trigger crash animation on the airplane
+        airplaneController.PlayCrashAnimation();
+
+        // Show the crash panel
+        crashPanel.SetActive(true);
     }
+
+
 
 
     void RestartGame()
     {
         Debug.Log("Restarting game...");
+
+        // Reset game state variables
         isCrashed = false;
+        controlsLocked = false;
+        isLandingSequenceActive = false;
         successfulInputs = 0;
         attempts = 0;
         difficultyLevel = 1; // Reset difficulty level
-        controlsLocked = false;
-        isLandingSequenceActive = false;
+        Debug.Log($"Difficulty reset to level {difficultyLevel}");
+
+        // Reset locked inputs
+        leftInputLocked = false;
+        rightInputLocked = false;
+        lockedLeftInput = "";
+        lockedRightInput = "";
+
+        // Reset airplane and crash timer
         airplaneController.ResetPlaneSize();
+        airplaneController.ResetCrashTimer(difficultyLevel);
+
         crashPanel.SetActive(false);
 
-        GenerateNewDirections(); // Generate new directions
+        // Generate new directions for the player
+        GenerateNewDirections();
     }
+
+
 
 
 }

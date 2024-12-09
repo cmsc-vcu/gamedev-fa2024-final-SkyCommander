@@ -27,18 +27,19 @@ public class AirplaneController : MonoBehaviour
 
     void Update()
     {
-        if (isCrashed) return;
+        if (isCrashed) return; // Skip updates if the plane has crashed
 
-        if (isGrowing && transform.localScale.x < maxScale.x)
+        // Handle plane growth (removed max scale check)
+        if (isGrowing)
         {
             transform.localScale += Vector3.one * growRate * Time.deltaTime;
         }
 
+        // Handle lateral movement during landing
         if (isMovingLaterally)
         {
             MoveDuringLanding();
         }
-
         if (timerActive)
         {
             crashTimer -= Time.deltaTime;
@@ -48,6 +49,7 @@ public class AirplaneController : MonoBehaviour
             }
         }
     }
+
 
     public void StopGrowth()
     {
@@ -61,7 +63,7 @@ public class AirplaneController : MonoBehaviour
         isMovingLaterally = true;
         moveRight = Random.value < 0.5f;
         planeRenderer.flipX = moveRight;
-        ResetCrashTimer(); // Reset the timer on successful landing
+        ResetCrashTimer(1); // Reset the timer on successful landing
     }
 
     void MoveDuringLanding()
@@ -79,37 +81,42 @@ public class AirplaneController : MonoBehaviour
         if (!isCrashed)
         {
             Debug.Log("Playing crash animation...");
+            animator.SetTrigger("Crash");
             isCrashed = true;
             isGrowing = false;
-            animator.SetTrigger("Crash");
+            
         }
     }
 
     public void ResetPlaneSize()
     {
-        Debug.Log("Resetting plane size and position...");
-        transform.localScale = initialScale;
-        transform.position = startPosition;
-        isGrowing = true;
-        isMovingLaterally = false;
-        isCrashed = false;
-        planeRenderer.flipX = false;
+        Debug.Log("Resetting plane size, position, and speed...");
+        transform.localScale = initialScale; // Reset size
+        transform.position = startPosition; // Reset position to the start
+        isGrowing = true; // Enable size growth again
+        isMovingLaterally = false; // Stop any lateral movement
+        isCrashed = false; // Reset crash state
+        planeRenderer.flipX = false; // Reset sprite orientation
 
+        // Reset animation state
         if (animator != null)
         {
             animator.ResetTrigger("Crash");
             animator.ResetTrigger("Land");
-            animator.Play("Fly", 0, 0);
+            animator.Play("Fly", 0, 0); // Return to the "Fly" animation state
         }
-        ResetCrashTimer();
+
+        landingSpeed = 1f; // Reset lateral movement speed
+        growRate = 0.1f; // Reset growth rate
     }
+
 
     private void TriggerCrash()
     {
+        if (isCrashed) return;
         Debug.Log("Plane crashed due to timeout!");
-        isCrashed = true;
         timerActive = false; // Stop the timer
-        PlayCrashAnimation();
+        //PlayCrashAnimation();
         // Notify the game (e.g., DirectionSignController) about the crash
         FindObjectOfType<DirectionSignController>()?.TriggerCrash();
     }
@@ -119,9 +126,16 @@ public class AirplaneController : MonoBehaviour
         landingSpeed += difficulty * 0.5f; // Adjust lateral movement speed
     }
 
-    public void ResetCrashTimer()
+    public void ResetCrashTimer(int difficultyLevel)
     {
-        crashTimer = 15f; // Reset to 15 seconds
+        float baseTime = 15f; // Starting time for the crash timer
+        float timeReductionPerLevel = 1f; // Reduce time by 1 second per difficulty level
+
+        // Calculate the new timer value, ensuring it doesn't drop below a minimum threshold
+        crashTimer = Mathf.Max(baseTime - (difficultyLevel - 1) * timeReductionPerLevel, 5f); // Minimum of 5 seconds
         timerActive = true; // Reactivate the timer
+
+        Debug.Log($"Crash timer reset to {crashTimer} seconds for difficulty level {difficultyLevel}");
     }
+
 }
