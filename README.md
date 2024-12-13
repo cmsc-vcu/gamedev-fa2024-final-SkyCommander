@@ -30,7 +30,7 @@ This game emphasizes spatial coordination and dual-task management at a level un
 
 ## Important Links
 
-- Game URL: Coming Soon
+- Game URL: [Game](https://simess101.itch.io/sky-commander)
 - GITHUB URL: [Github](https://github.com/cmsc-vcu/gamedev-fa2024-final-simess101)
 - Gameplay Video URL: [Gameplay](https://drive.google.com/file/d/1mRok9djswVITix_jfsby5tsdooplVG7n/view?usp=sharing)
 - Google Doc writeup: [Google Slides](https://docs.google.com/presentation/d/1LPPghLMnG5b44LMmLlWRv0oJis3UIuFD3I0qyjA1r8Q/edit?usp=sharing)
